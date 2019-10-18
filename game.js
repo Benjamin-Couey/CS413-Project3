@@ -9,7 +9,7 @@ const SPACE = 32;
 const SHIFT = 16;
 
 var GAME_DIMENSION = 400;
-var GAME_SCALE = 4;
+var GAME_SCALE = 3;
 
 // -------------------- Main code --------------------
 
@@ -61,12 +61,19 @@ console.log("Finish container definition");
 
 // -------------------- Initialization --------------------
 
+var player;
+var world;
+
 console.log("Start initialization");
 
 PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
 
 // Load sprite sheet with all game's sprites
-PIXI.loader.add("map.json").add("tileset.png").load( initializeSprites );
+PIXI.loader
+	.add("map.json")
+	.add("tileset.png")
+	.add('blob', "blob.png")
+	.load( initializeSprites );
 
 // Create the sprites that will be used in every biome
 // The large title, help, and game over screen sprites are bigger than this whole
@@ -76,6 +83,17 @@ function initializeSprites()
   var tu = new TileUtilities( PIXI );
   world = tu.makeTiledWorld("map.json", "tileset.png");
   stage.addChild(world);
+  
+  //add in the player
+  var playerTexture = PIXI.Texture.from("blob.png");
+  
+  player = new PIXI.Sprite(playerTexture);
+  player.position.x = 200;
+  player.position.y = 200;
+  player.anchor.x = 0.5;
+  player.anchor.y = 0.5;
+
+  stage.addChild(player);
 }
 
 // -------------------- Objects --------------------
@@ -158,6 +176,37 @@ function boundObjects()
 
 }
 
+// The move function starts or continues movement based on if a key is down or not
+function move() 
+{
+  if (aDown) 
+  {
+    createjs.Tween.get(player).to({x: player.x - 32}, 500).call(move);
+  }
+  if (dDown)
+  {
+	createjs.Tween.get(player).to({x: player.x + 32}, 500).call(move);
+  }
+    
+  if (wDown)
+  {
+    createjs.Tween.get(player).to({y: player.y - 32}, 500).call(move);
+  }
+  
+  if (sDown)
+  {
+    createjs.Tween.get(player).to({y: player.y + 32}, 500).call(move);
+  }
+}
+
+
+function update_camera() 
+{
+  stage.x = -player.position.x*GAME_SCALE + GAME_DIMENSION/2 - player.width/2*GAME_SCALE;
+  stage.y = -player.position.y*GAME_SCALE + GAME_DIMENSION/2 + player.height/2*GAME_SCALE;
+  stage.x = -Math.max(0, Math.min(world.worldWidth*GAME_SCALE - GAME_DIMENSION, -stage.x));
+  stage.y = -Math.max(0, Math.min(world.worldHeight*GAME_SCALE - GAME_DIMENSION, -stage.y));
+}
 
 
 // -------------------- Main game loop --------------------
@@ -166,7 +215,7 @@ function gameLoop()
   setTimeout( function()
   {
     requestAnimationFrame(gameLoop);
-
+	update_camera();
 
 
     renderer.render(stage);
