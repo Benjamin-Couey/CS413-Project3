@@ -92,6 +92,9 @@ function initializeSprites()
   // Add player to map's entity layer
   var entity_layer = world.getObject("Entities");
   entity_layer.addChild(player.sprite);
+  
+  //Start our game loop
+  gameLoop();
 }
 
 // -------------------- Objects --------------------
@@ -193,28 +196,29 @@ function update_camera() {
 function bound( sprite )
 {
   // Given a sprite, make sure that it stays within the bounds of the screen
-  if( sprite.position.x < 0 )
+  // Accounts for the sprites anchor position to keep the entirety of the sprite in bounds
+  if( sprite.position.x < sprite.anchor.x * 32 )
   {
-    sprite.position.x = 0;
+    sprite.position.x = sprite.anchor.x * 32;
   }
-  else if( sprite.position.x > 600 )
+  else if( sprite.position.x + sprite.anchor.x * 32 > world.worldWidth )
   {
-    sprite.position.x = 600;
+    sprite.position.x = world.worldWidth - sprite.anchor.x * 32;
   }
-  if( sprite.position.y < 0 )
+  if( sprite.position.y < sprite.anchor.y * 32 )
   {
-    sprite.position.y = 0;
+    sprite.position.y = sprite.anchor.y * 32;
   }
-  else if( sprite.position.y > 600 )
+  else if( sprite.position.y + sprite.anchor.y * 32 > world.worldHeight )
   {
-    sprite.position.y = 600;
+    sprite.position.y = world.worldHeight - sprite.anchor.y * 32;
   }
 }
 
 function boundObjects()
 {
   // Keep players and enemies from moving off of the screen
-
+  bound( player.sprite );
 }
 
 
@@ -228,9 +232,9 @@ function gameLoop()
 
     movePlayer();
     update_camera();
+	
+	boundObjects()
 
     renderer.render(stage);
   }, 1000 / fps );
 }
-
-gameLoop();
