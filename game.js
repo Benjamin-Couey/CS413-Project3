@@ -8,8 +8,11 @@ const DKEY = 68;
 const SPACE = 32;
 const SHIFT = 16;
 
-var GAME_DIMENSION = 400;
-var GAME_SCALE = 4;
+var GAME_WIDTH = 400;
+var GAME_HEIGHT = 400;
+var GAME_SCALE = 1;
+
+var PLAYERSPEED = 5;
 
 // -------------------- Main code --------------------
 
@@ -28,7 +31,10 @@ var dDown = false;
 
 // global arrays to store references to game Objects
 // these will be filled, emptied, and modified as new screens are loaded
+var player;
 
+// A reference to the tile world that will be used by several functions
+var world;
 
 // a reference to the spritesheet which will be updated as new screens are loaded
 
@@ -40,7 +46,7 @@ var dDown = false;
 // ---------- PIXI.js boiler plate code
 var gameport = document.getElementById("gameport");
 
-var renderer = PIXI.autoDetectRenderer({width: GAME_DIMENSION, height: GAME_DIMENSION,
+var renderer = PIXI.autoDetectRenderer({width: GAME_WIDTH, height: GAME_HEIGHT,
                                         backgroundColor: 0xa66407});
 gameport.appendChild(renderer.view);
 
@@ -73,12 +79,37 @@ PIXI.loader.add("map.json").add("tileset.png").load( initializeSprites );
 // sheet and so are loaded seperately.
 function initializeSprites()
 {
+  // Initialize tile utilities
   var tu = new TileUtilities( PIXI );
+
+  // Get a reference to the tile map and add it to the stage
   world = tu.makeTiledWorld("map.json", "tileset.png");
   stage.addChild(world);
+
+  // Create the player
+  player = new player();
+
+  // Add player to map's entity layer
+  var entity_layer = world.getObject("Entities");
+  entity_layer.addChild(player.sprite);
 }
 
 // -------------------- Objects --------------------
+
+function player()
+{
+  // Get a reference to the player object in the entities layer of the map
+  var stgPlayer = world.getObject("Player");
+
+  // Create the player's sprite
+  this.sprite = new PIXI.Sprite( new PIXI.Texture.from("Assets/Player.png") );
+  this.sprite.x = stgPlayer.x;
+  this.sprite.y = stgPlayer.y;
+  this.sprite.anchor.set(0.5);
+
+  // Instance variables
+  this.moving = false;
+}
 
 // -------------------- Define Functions --------------------
 
@@ -131,6 +162,34 @@ function keyupEventHandler(e)
 document.addEventListener('keydown', keydownEventHandler);
 document.addEventListener('keyup', keyupEventHandler);
 
+
+function movePlayer()
+{
+  // Move player
+  if (wDown) { // W key
+    player.sprite.y -= PLAYERSPEED;
+  }
+
+  if (sDown) { // S key
+    player.sprite.y += PLAYERSPEED;
+  }
+
+  if (aDown) { // A key
+    player.sprite.x -= PLAYERSPEED;
+  }
+
+  if (dDown) { // D key
+    player.sprite.x += PLAYERSPEED;
+  }
+}
+
+function update_camera() {
+  stage.x = -player.sprite.x*GAME_SCALE + GAME_WIDTH/2 - player.sprite.width/2*GAME_SCALE;
+  stage.y = -player.sprite.y*GAME_SCALE + GAME_HEIGHT/2 + player.sprite.height/2*GAME_SCALE;
+  stage.x = -Math.max(0, Math.min(world.worldWidth*GAME_SCALE - GAME_WIDTH, -stage.x));
+  stage.y = -Math.max(0, Math.min(world.worldHeight*GAME_SCALE - GAME_HEIGHT, -stage.y));
+}
+
 function bound( sprite )
 {
   // Given a sprite, make sure that it stays within the bounds of the screen
@@ -167,7 +226,8 @@ function gameLoop()
   {
     requestAnimationFrame(gameLoop);
 
-
+    movePlayer();
+    update_camera();
 
     renderer.render(stage);
   }, 1000 / fps );
