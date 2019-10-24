@@ -12,6 +12,10 @@ var GAME_WIDTH = 400;
 var GAME_HEIGHT = 400;
 var GAME_SCALE = 1;
 
+var TITLE = 0;
+var HELP = 1;
+var GAME = 2;
+
 var PLAYERSPEED = 5;
 
 // -------------------- Main code --------------------
@@ -51,8 +55,8 @@ var renderer = PIXI.autoDetectRenderer({width: GAME_WIDTH, height: GAME_HEIGHT,
 gameport.appendChild(renderer.view);
 
 var stage = new PIXI.Container();
-stage.scale.x = GAME_SCALE;
-stage.scale.y = GAME_SCALE;
+//stage.scale.x = GAME_SCALE;
+//stage.scale.y = GAME_SCALE;
 
 
 
@@ -60,6 +64,41 @@ stage.scale.y = GAME_SCALE;
 // Create the main states of the game and add them to the stage
 
 console.log("Start container definition");
+
+// ---------- Start screen
+var title = new PIXI.Container();
+stage.addChild(title);
+
+// Create title screen sprite
+var titleSprite = new PIXI.Sprite( PIXI.Texture.fromFrame("Assets/GameTitle.png") );
+titleSprite.anchor.set(0.5);
+titleSprite.position.x = GAME_WIDTH / 2;
+titleSprite.position.y = GAME_HEIGHT / 2;
+
+title.addChild(titleSprite);
+
+// ---------- Help screen
+var help = new PIXI.Container();
+help.visible = false;
+stage.addChild(help);
+
+// ---------- Main game screen
+var game = new PIXI.Container();
+game.visible = false;
+stage.addChild(game);
+
+// Create help screen sprite
+var helpSprite = new PIXI.Sprite( PIXI.Texture.fromFrame("Assets/GameHelp.png") );
+helpSprite.anchor.set(0.5);
+helpSprite.position.x = GAME_WIDTH / 2;
+helpSprite.position.y = GAME_HEIGHT / 2;
+
+// Clicking on the help page should return user to the title screen.
+// Enable and attatch mouse handler
+helpSprite.interactive = true;
+helpSprite.on('click', loadTitle );
+
+help.addChild(helpSprite);
 
 console.log("Finish container definition");
 
@@ -82,9 +121,9 @@ function initializeSprites()
   // Initialize tile utilities
   var tu = new TileUtilities( PIXI );
 
-  // Get a reference to the tile map and add it to the stage
+  //Get a reference to the tile map and add it to the stage
   world = tu.makeTiledWorld("map.json", "tileset.png");
-  stage.addChild(world);
+  game.addChild(world);
 
   // Create the player
   player = new player();
@@ -92,7 +131,46 @@ function initializeSprites()
   // Add player to map's entity layer
   var entity_layer = world.getObject("Entities");
   entity_layer.addChild(player.sprite);
-  
+
+
+  // Create and add the buttons for the title screen
+  // NOTE: This has to be done in this function because in the future those buttons
+  // will be part of a spritesheet that is loaded along with the map and tileset.
+  // Add game title to the title screen
+  var titleText = new PIXI.Sprite( PIXI.Texture.fromFrame("Assets/Title.png") );
+  titleText.anchor.set(0.5);
+  titleText.position.x = GAME_WIDTH / 2;
+  titleText.position.y = GAME_HEIGHT * 0.1;
+
+  title.addChild( titleText );
+
+  // Add buttons to the title screen
+  var startButton = new PIXI.Sprite( PIXI.Texture.fromFrame("Assets/StartButton.png") );
+  startButton.anchor.set(0.5);
+  startButton.position.x = GAME_WIDTH / 2;
+  startButton.position.y = GAME_HEIGHT * 0.3;
+
+  // Enable and attatch mouse handler
+  startButton.interactive = true;
+  startButton.buttonMode = true;
+
+  startButton.on('click', loadGame );
+
+  title.addChild( startButton );
+
+  var helpButton = new PIXI.Sprite( PIXI.Texture.fromFrame("Assets/HelpButton.png") );
+  helpButton.anchor.set(0.5);
+  helpButton.position.x = GAME_WIDTH / 2;
+  helpButton.position.y = GAME_HEIGHT * 0.4;
+
+  // Enable and attatch mouse handler
+  helpButton.interactive = true;
+  helpButton.buttonMode = true;
+
+  helpButton.on('click', loadHelp );
+
+  title.addChild( helpButton );
+
   //Start our game loop
   gameLoop();
 }
@@ -125,6 +203,33 @@ function distance( x1, y1, x2, y2)
 }
 
 // ---------- Screen loading functions
+function loadTitle()
+{
+  console.log("Loading title");
+  title.visible = true;
+  help.visible = false;
+  game.visible = false;
+  gameState = TITLE;
+}
+
+function loadHelp()
+{
+  console.log("Loading help");
+  title.visible = false;
+  help.visible = true;
+  game.visible = false;
+  gameState = HELP;
+}
+
+function loadGame()
+{
+  console.log("Loading title");
+  title.visible = false;
+  help.visible = false;
+  game.visible = true;
+  gameState = GAME;
+}
+
 // ---------- Input handlers
 function keydownEventHandler(e)
 {
@@ -230,10 +335,12 @@ function gameLoop()
   {
     requestAnimationFrame(gameLoop);
 
-    movePlayer();
-    update_camera();
-	
-	boundObjects()
+    if( gameState == GAME )
+    {
+      movePlayer();
+      update_camera();
+      boundObjects();
+    }
 
     renderer.render(stage);
   }, 1000 / fps );
