@@ -40,6 +40,9 @@ var player;
 // A reference to the tile world that will be used by several functions
 var world;
 
+// A reference to the collidable objects in the world
+var collidableArray;
+
 // a reference to the spritesheet which will be updated as new screens are loaded
 
 
@@ -58,7 +61,8 @@ var stage = new PIXI.Container();
 //stage.scale.x = GAME_SCALE;
 //stage.scale.y = GAME_SCALE;
 
-
+//Global Tile Utilities
+var tu;
 
 // -------------------- Main PIXI Containers --------------------
 // Create the main states of the game and add them to the stage
@@ -119,7 +123,7 @@ PIXI.loader.add("map.json").add("tileset.png").load( initializeSprites );
 function initializeSprites()
 {
   // Initialize tile utilities
-  var tu = new TileUtilities( PIXI );
+  tu = new TileUtilities( PIXI );
 
   //Get a reference to the tile map and add it to the stage
   world = tu.makeTiledWorld("map.json", "tileset.png");
@@ -131,7 +135,9 @@ function initializeSprites()
   // Add player to map's entity layer
   var entity_layer = world.getObject("Entities");
   entity_layer.addChild(player.sprite);
-
+  
+  //Add in the collidable objects to our collision array
+  collidableArray = world.getObject("WallsLayer").data;
 
   // Create and add the buttons for the title screen
   // NOTE: This has to be done in this function because in the future those buttons
@@ -273,22 +279,62 @@ document.addEventListener('keyup', keyupEventHandler);
 
 function movePlayer()
 {
+  // Check for collison
+  var collide = tu.hitTestTile(player.sprite, collidableArray, 0, world, "every");
+  var lastX = player.sprite.x;
+  var lastY = player.sprite.y;
   // Move player
   if (wDown) { // W key
-    player.sprite.y -= PLAYERSPEED;
+	
+	if(!collide.hit)
+	{
+	  createjs.Tween.get(player.sprite.position).to({y: lastY + 16}, 200, createjs.Ease.bounceIn);
+	}
+	if(collide.hit)
+	{
+	  player.sprite.y -= PLAYERSPEED;
+	}
+	
   }
 
   if (sDown) { // S key
-    player.sprite.y += PLAYERSPEED;
+	
+	if(!collide.hit)
+	{
+	  createjs.Tween.get(player.sprite.position).to({y: lastY - 16}, 200, createjs.Ease.bounceIn);
+	}
+	if(collide.hit)
+	{
+	  player.sprite.y += PLAYERSPEED;
+	}
   }
 
   if (aDown) { // A key
-    player.sprite.x -= PLAYERSPEED;
+	
+	if(!collide.hit)
+	{
+	  createjs.Tween.get(player.sprite.position).to({x: lastX + 16}, 200, createjs.Ease.bounceIn);
+	}
+	if(collide.hit)
+	{
+	  player.sprite.x -= PLAYERSPEED;
+	}
+	
   }
 
   if (dDown) { // D key
-    player.sprite.x += PLAYERSPEED;
+	
+	if(!collide.hit)
+	{
+	  createjs.Tween.get(player.sprite.position).to({x: lastX - 16}, 200, createjs.Ease.bounceIn);
+	}
+	if(collide.hit)
+	{
+	  player.sprite.x += PLAYERSPEED;
+	}
+	
   }
+  
 }
 
 function update_camera() {
