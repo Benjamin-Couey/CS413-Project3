@@ -129,6 +129,10 @@ function initializeSprites()
 
   //Get a reference to the tile map and add it to the stage
   world = tu.makeTiledWorld("map.json", "tileset.png");
+  console.log("World parameters");
+  console.log( world.tilewidth );
+  console.log( world.tileheight );
+  console.log( world.widthInTiles );
   game.addChild(world);
 
   // Get a reference to the spritesheet
@@ -197,9 +201,11 @@ function player()
   this.sprite = new PIXI.Sprite( sheet.textures["Player1.png"] );
   this.sprite.x = stgPlayer.x;
   this.sprite.y = stgPlayer.y;
-  this.sprite.anchor.set(0.5);
+  //this.sprite.anchor.set(0.5);
 
   // Instance variables
+  this.vx = 0;
+  this.vy = 0;
   this.moving = false;
 }
 
@@ -285,60 +291,55 @@ document.addEventListener('keyup', keyupEventHandler);
 function movePlayer()
 {
   // Check for collison
-  var collide = tu.hitTestTile(player.sprite, collidableArray, 0, world, "every");
-  var lastX = player.sprite.x;
-  var lastY = player.sprite.y;
+
+
   // Move player
-  if (wDown) { // W key
 
-	if(!collide.hit)
-	{
-	  createjs.Tween.get(player.sprite.position).to({y: lastY + 16}, 200, createjs.Ease.bounceIn);
-	}
-	if(collide.hit)
-	{
-	  player.sprite.y -= PLAYERSPEED;
-	}
+    // W key
+    if (wDown) {
+      player.vy = -1;
+      player.sprite.texture = sheet.textures["Player3.png"]
+    }
 
-  }
+    // S key
+    else if (sDown) {
+    	player.vy = 1;
+      player.sprite.texture = sheet.textures["Player1.png"]
+    }
 
-  if (sDown) { // S key
+    else {
+      player.vy = 0;
+    }
 
-	if(!collide.hit)
-	{
-	  createjs.Tween.get(player.sprite.position).to({y: lastY - 16}, 200, createjs.Ease.bounceIn);
-	}
-	if(collide.hit)
-	{
-	  player.sprite.y += PLAYERSPEED;
-	}
-  }
+    // A key
+    if (aDown) {
+      player.vx = -1;
+      player.sprite.texture = sheet.textures["Player4.png"]
+    }
 
-  if (aDown) { // A key
+    // D key
+    else if (dDown) {
+      player.vx = 1;
+      player.sprite.texture = sheet.textures["Player2.png"]
+    }
 
-	if(!collide.hit)
-	{
-	  createjs.Tween.get(player.sprite.position).to({x: lastX + 16}, 200, createjs.Ease.bounceIn);
-	}
-	if(collide.hit)
-	{
-	  player.sprite.x -= PLAYERSPEED;
-	}
+    else {
+      player.vx = 0;
+    }
 
-  }
+    player.sprite.x += player.vx * PLAYERSPEED;
+    player.sprite.y += player.vy * PLAYERSPEED;
 
-  if (dDown) { // D key
+    var collide = tu.hitTestTile(player.sprite, collidableArray, 0, world, "every");
 
-	if(!collide.hit)
-	{
-	  createjs.Tween.get(player.sprite.position).to({x: lastX - 16}, 200, createjs.Ease.bounceIn);
-	}
-	if(collide.hit)
-	{
-	  player.sprite.x += PLAYERSPEED;
-	}
-
-  }
+    // Check if the player collided with a wall
+    if( !collide.hit ) {
+      // Reverse the player
+      player.sprite.x -= player.vx * PLAYERSPEED;
+      player.sprite.y -= player.vy * PLAYERSPEED;
+      player.vx = 0;
+      player.vy = 0;
+    }
 
 }
 
