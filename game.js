@@ -43,8 +43,11 @@ var world;
 // A reference to the collidable objects in the world
 var collidableArray;
 
-// a reference to the spritesheet which will be updated as new screens are loaded
+// a reference to the spritesheet
+var sheet;
 
+//Global Tile Utilities
+var tu;
 
 // a reference to the main theme's audio file
 
@@ -61,8 +64,7 @@ var stage = new PIXI.Container();
 //stage.scale.x = GAME_SCALE;
 //stage.scale.y = GAME_SCALE;
 
-//Global Tile Utilities
-var tu;
+
 
 // -------------------- Main PIXI Containers --------------------
 // Create the main states of the game and add them to the stage
@@ -74,7 +76,7 @@ var title = new PIXI.Container();
 stage.addChild(title);
 
 // Create title screen sprite
-var titleSprite = new PIXI.Sprite( PIXI.Texture.fromFrame("Assets/GameTitle.png") );
+var titleSprite = new PIXI.Sprite( PIXI.Texture.fromFrame("GameTitle.png") );
 titleSprite.anchor.set(0.5);
 titleSprite.position.x = GAME_WIDTH / 2;
 titleSprite.position.y = GAME_HEIGHT / 2;
@@ -92,7 +94,7 @@ game.visible = false;
 stage.addChild(game);
 
 // Create help screen sprite
-var helpSprite = new PIXI.Sprite( PIXI.Texture.fromFrame("Assets/GameHelp.png") );
+var helpSprite = new PIXI.Sprite( PIXI.Texture.fromFrame("GameHelp.png") );
 helpSprite.anchor.set(0.5);
 helpSprite.position.x = GAME_WIDTH / 2;
 helpSprite.position.y = GAME_HEIGHT / 2;
@@ -115,7 +117,7 @@ console.log("Start initialization");
 PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
 
 // Load sprite sheet with all game's sprites
-PIXI.loader.add("map.json").add("tileset.png").load( initializeSprites );
+PIXI.loader.add("Assets.json").add("map.json").add("tileset.png").load( initializeSprites );
 
 // Create the sprites that will be used in every biome
 // The large title, help, and game over screen sprites are bigger than this whole
@@ -129,13 +131,16 @@ function initializeSprites()
   world = tu.makeTiledWorld("map.json", "tileset.png");
   game.addChild(world);
 
+  // Get a reference to the spritesheet
+  sheet = PIXI.loader.resources["Assets.json"];
+
   // Create the player
   player = new player();
 
   // Add player to map's entity layer
   var entity_layer = world.getObject("Entities");
   entity_layer.addChild(player.sprite);
-  
+
   //Add in the collidable objects to our collision array
   collidableArray = world.getObject("WallsLayer").data;
 
@@ -143,7 +148,7 @@ function initializeSprites()
   // NOTE: This has to be done in this function because in the future those buttons
   // will be part of a spritesheet that is loaded along with the map and tileset.
   // Add game title to the title screen
-  var titleText = new PIXI.Sprite( PIXI.Texture.fromFrame("Assets/Title.png") );
+  var titleText = new PIXI.Sprite( sheet.textures["Title.png"] );
   titleText.anchor.set(0.5);
   titleText.position.x = GAME_WIDTH / 2;
   titleText.position.y = GAME_HEIGHT * 0.1;
@@ -151,7 +156,7 @@ function initializeSprites()
   title.addChild( titleText );
 
   // Add buttons to the title screen
-  var startButton = new PIXI.Sprite( PIXI.Texture.fromFrame("Assets/StartButton.png") );
+  var startButton = new PIXI.Sprite( sheet.textures["StartButton.png"] );
   startButton.anchor.set(0.5);
   startButton.position.x = GAME_WIDTH / 2;
   startButton.position.y = GAME_HEIGHT * 0.3;
@@ -164,7 +169,7 @@ function initializeSprites()
 
   title.addChild( startButton );
 
-  var helpButton = new PIXI.Sprite( PIXI.Texture.fromFrame("Assets/HelpButton.png") );
+  var helpButton = new PIXI.Sprite( sheet.textures["HelpButton.png"] );
   helpButton.anchor.set(0.5);
   helpButton.position.x = GAME_WIDTH / 2;
   helpButton.position.y = GAME_HEIGHT * 0.4;
@@ -189,7 +194,7 @@ function player()
   var stgPlayer = world.getObject("Player");
 
   // Create the player's sprite
-  this.sprite = new PIXI.Sprite( new PIXI.Texture.from("Assets/Player.png") );
+  this.sprite = new PIXI.Sprite( sheet.textures["Player1.png"] );
   this.sprite.x = stgPlayer.x;
   this.sprite.y = stgPlayer.y;
   this.sprite.anchor.set(0.5);
@@ -285,7 +290,7 @@ function movePlayer()
   var lastY = player.sprite.y;
   // Move player
   if (wDown) { // W key
-	
+
 	if(!collide.hit)
 	{
 	  createjs.Tween.get(player.sprite.position).to({y: lastY + 16}, 200, createjs.Ease.bounceIn);
@@ -294,11 +299,11 @@ function movePlayer()
 	{
 	  player.sprite.y -= PLAYERSPEED;
 	}
-	
+
   }
 
   if (sDown) { // S key
-	
+
 	if(!collide.hit)
 	{
 	  createjs.Tween.get(player.sprite.position).to({y: lastY - 16}, 200, createjs.Ease.bounceIn);
@@ -310,7 +315,7 @@ function movePlayer()
   }
 
   if (aDown) { // A key
-	
+
 	if(!collide.hit)
 	{
 	  createjs.Tween.get(player.sprite.position).to({x: lastX + 16}, 200, createjs.Ease.bounceIn);
@@ -319,11 +324,11 @@ function movePlayer()
 	{
 	  player.sprite.x -= PLAYERSPEED;
 	}
-	
+
   }
 
   if (dDown) { // D key
-	
+
 	if(!collide.hit)
 	{
 	  createjs.Tween.get(player.sprite.position).to({x: lastX - 16}, 200, createjs.Ease.bounceIn);
@@ -332,9 +337,9 @@ function movePlayer()
 	{
 	  player.sprite.x += PLAYERSPEED;
 	}
-	
+
   }
-  
+
 }
 
 function update_camera() {
