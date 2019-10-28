@@ -49,8 +49,6 @@ var sheet;
 //Global Tile Utilities
 var tu;
 
-// a reference to the main theme's audio file
-
 // ---------- PIXI.js boiler plate code
 var gameport = document.getElementById("gameport");
 
@@ -180,7 +178,16 @@ function initializeSprites()
 
   helpButton.on('click', loadHelp );
 
-  title.addChild( helpButton );
+    title.addChild(helpButton);
+
+    // Background Sound
+    PIXI.sound.Sound.from({
+        url: "Assets/backgroundmusic.wav",
+        preload: true,
+        autoPlay: true,
+        loop: true,
+        volume: 0.03,
+    });
 
   //Start our game loop
   gameLoop();
