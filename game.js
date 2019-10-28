@@ -51,8 +51,6 @@ var tu;
 
 // a reference to the main theme's audio file
 
-// global cycle used to change food objects
-
 // ---------- PIXI.js boiler plate code
 var gameport = document.getElementById("gameport");
 
@@ -61,8 +59,6 @@ var renderer = PIXI.autoDetectRenderer({width: GAME_WIDTH, height: GAME_HEIGHT,
 gameport.appendChild(renderer.view);
 
 var stage = new PIXI.Container();
-//stage.scale.x = GAME_SCALE;
-//stage.scale.y = GAME_SCALE;
 
 
 
@@ -201,7 +197,6 @@ function player()
   this.sprite = new PIXI.Sprite( sheet.textures["Player1.png"] );
   this.sprite.x = stgPlayer.x;
   this.sprite.y = stgPlayer.y;
-  //this.sprite.anchor.set(0.5);
 
   // Instance variables
   this.vx = 0;
@@ -290,11 +285,7 @@ document.addEventListener('keyup', keyupEventHandler);
 
 function movePlayer()
 {
-  // Check for collison
-
-
-  // Move player
-
+  // Vertical axis
     // W key
     if (wDown) {
       player.vy = -1;
@@ -311,6 +302,7 @@ function movePlayer()
       player.vy = 0;
     }
 
+  // Horizontal axis
     // A key
     if (aDown) {
       player.vx = -1;
@@ -327,14 +319,15 @@ function movePlayer()
       player.vx = 0;
     }
 
+    // Actually move the player
     player.sprite.x += player.vx * PLAYERSPEED;
     player.sprite.y += player.vy * PLAYERSPEED;
 
+    // Check if the player collided with a wall
     var collide = tu.hitTestTile(player.sprite, collidableArray, 0, world, "every");
 
-    // Check if the player collided with a wall
+    // If that is the case, reverse the player's movement and stop them from moving
     if( !collide.hit ) {
-      // Reverse the player
       player.sprite.x -= player.vx * PLAYERSPEED;
       player.sprite.y -= player.vy * PLAYERSPEED;
       player.vx = 0;
