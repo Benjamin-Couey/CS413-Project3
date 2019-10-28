@@ -43,8 +43,11 @@ var world;
 // A reference to the collidable objects in the world
 var collidableArray;
 
-// a reference to the spritesheet which will be updated as new screens are loaded
+// a reference to the spritesheet
+var sheet;
 
+//Global Tile Utilities
+var tu;
 
 // a reference to the main theme's audio file
 
@@ -61,8 +64,7 @@ var stage = new PIXI.Container();
 //stage.scale.x = GAME_SCALE;
 //stage.scale.y = GAME_SCALE;
 
-//Global Tile Utilities
-var tu;
+
 
 // -------------------- Main PIXI Containers --------------------
 // Create the main states of the game and add them to the stage
@@ -74,7 +76,7 @@ var title = new PIXI.Container();
 stage.addChild(title);
 
 // Create title screen sprite
-var titleSprite = new PIXI.Sprite( PIXI.Texture.fromFrame("Assets/GameTitle.png") );
+var titleSprite = new PIXI.Sprite( PIXI.Texture.fromFrame("GameTitle.png") );
 titleSprite.anchor.set(0.5);
 titleSprite.position.x = GAME_WIDTH / 2;
 titleSprite.position.y = GAME_HEIGHT / 2;
@@ -92,7 +94,7 @@ game.visible = false;
 stage.addChild(game);
 
 // Create help screen sprite
-var helpSprite = new PIXI.Sprite( PIXI.Texture.fromFrame("Assets/GameHelp.png") );
+var helpSprite = new PIXI.Sprite( PIXI.Texture.fromFrame("GameHelp.png") );
 helpSprite.anchor.set(0.5);
 helpSprite.position.x = GAME_WIDTH / 2;
 helpSprite.position.y = GAME_HEIGHT / 2;
@@ -115,7 +117,7 @@ console.log("Start initialization");
 PIXI.SCALE_MODES.DEFAULT = PIXI.SCALE_MODES.NEAREST;
 
 // Load sprite sheet with all game's sprites
-PIXI.loader.add("map.json").add("tileset.png").load( initializeSprites );
+PIXI.loader.add("Assets.json").add("map.json").add("tileset.png").load( initializeSprites );
 
 // Create the sprites that will be used in every biome
 // The large title, help, and game over screen sprites are bigger than this whole
@@ -127,7 +129,14 @@ function initializeSprites()
 
   //Get a reference to the tile map and add it to the stage
   world = tu.makeTiledWorld("map.json", "tileset.png");
+  console.log("World parameters");
+  console.log( world.tilewidth );
+  console.log( world.tileheight );
+  console.log( world.widthInTiles );
   game.addChild(world);
+
+  // Get a reference to the spritesheet
+  sheet = PIXI.loader.resources["Assets.json"];
 
   // Create the player
   player = new player();
@@ -135,7 +144,7 @@ function initializeSprites()
   // Add player to map's entity layer
   var entity_layer = world.getObject("Entities");
   entity_layer.addChild(player.sprite);
-  
+
   //Add in the collidable objects to our collision array
   collidableArray = world.getObject("WallsLayer").data;
 
@@ -143,7 +152,7 @@ function initializeSprites()
   // NOTE: This has to be done in this function because in the future those buttons
   // will be part of a spritesheet that is loaded along with the map and tileset.
   // Add game title to the title screen
-  var titleText = new PIXI.Sprite( PIXI.Texture.fromFrame("Assets/Title.png") );
+  var titleText = new PIXI.Sprite( sheet.textures["Title.png"] );
   titleText.anchor.set(0.5);
   titleText.position.x = GAME_WIDTH / 2;
   titleText.position.y = GAME_HEIGHT * 0.1;
@@ -151,7 +160,7 @@ function initializeSprites()
   title.addChild( titleText );
 
   // Add buttons to the title screen
-  var startButton = new PIXI.Sprite( PIXI.Texture.fromFrame("Assets/StartButton.png") );
+  var startButton = new PIXI.Sprite( sheet.textures["StartButton.png"] );
   startButton.anchor.set(0.5);
   startButton.position.x = GAME_WIDTH / 2;
   startButton.position.y = GAME_HEIGHT * 0.3;
@@ -164,7 +173,7 @@ function initializeSprites()
 
   title.addChild( startButton );
 
-  var helpButton = new PIXI.Sprite( PIXI.Texture.fromFrame("Assets/HelpButton.png") );
+  var helpButton = new PIXI.Sprite( sheet.textures["HelpButton.png"] );
   helpButton.anchor.set(0.5);
   helpButton.position.x = GAME_WIDTH / 2;
   helpButton.position.y = GAME_HEIGHT * 0.4;
@@ -189,12 +198,14 @@ function player()
   var stgPlayer = world.getObject("Player");
 
   // Create the player's sprite
-  this.sprite = new PIXI.Sprite( new PIXI.Texture.from("Assets/Player.png") );
+  this.sprite = new PIXI.Sprite( sheet.textures["Player1.png"] );
   this.sprite.x = stgPlayer.x;
   this.sprite.y = stgPlayer.y;
-  this.sprite.anchor.set(0.5);
+  //this.sprite.anchor.set(0.5);
 
   // Instance variables
+  this.vx = 0;
+  this.vy = 0;
   this.moving = false;
 }
 
@@ -280,61 +291,56 @@ document.addEventListener('keyup', keyupEventHandler);
 function movePlayer()
 {
   // Check for collison
-  var collide = tu.hitTestTile(player.sprite, collidableArray, 0, world, "every");
-  var lastX = player.sprite.x;
-  var lastY = player.sprite.y;
+
+
   // Move player
-  if (wDown) { // W key
-	
-	if(!collide.hit)
-	{
-	  createjs.Tween.get(player.sprite.position).to({y: lastY + 16}, 200, createjs.Ease.bounceIn);
-	}
-	if(collide.hit)
-	{
-	  player.sprite.y -= PLAYERSPEED;
-	}
-	
-  }
 
-  if (sDown) { // S key
-	
-	if(!collide.hit)
-	{
-	  createjs.Tween.get(player.sprite.position).to({y: lastY - 16}, 200, createjs.Ease.bounceIn);
-	}
-	if(collide.hit)
-	{
-	  player.sprite.y += PLAYERSPEED;
-	}
-  }
+    // W key
+    if (wDown) {
+      player.vy = -1;
+      player.sprite.texture = sheet.textures["Player3.png"]
+    }
 
-  if (aDown) { // A key
-	
-	if(!collide.hit)
-	{
-	  createjs.Tween.get(player.sprite.position).to({x: lastX + 16}, 200, createjs.Ease.bounceIn);
-	}
-	if(collide.hit)
-	{
-	  player.sprite.x -= PLAYERSPEED;
-	}
-	
-  }
+    // S key
+    else if (sDown) {
+    	player.vy = 1;
+      player.sprite.texture = sheet.textures["Player1.png"]
+    }
 
-  if (dDown) { // D key
-	
-	if(!collide.hit)
-	{
-	  createjs.Tween.get(player.sprite.position).to({x: lastX - 16}, 200, createjs.Ease.bounceIn);
-	}
-	if(collide.hit)
-	{
-	  player.sprite.x += PLAYERSPEED;
-	}
-	
-  }
-  
+    else {
+      player.vy = 0;
+    }
+
+    // A key
+    if (aDown) {
+      player.vx = -1;
+      player.sprite.texture = sheet.textures["Player4.png"]
+    }
+
+    // D key
+    else if (dDown) {
+      player.vx = 1;
+      player.sprite.texture = sheet.textures["Player2.png"]
+    }
+
+    else {
+      player.vx = 0;
+    }
+
+    player.sprite.x += player.vx * PLAYERSPEED;
+    player.sprite.y += player.vy * PLAYERSPEED;
+
+    var collide = tu.hitTestTile(player.sprite, collidableArray, 0, world, "every");
+
+    // Check if the player collided with a wall
+    if( !collide.hit ) {
+      // Reverse the player
+      player.sprite.x -= player.vx * PLAYERSPEED;
+      player.sprite.y -= player.vy * PLAYERSPEED;
+      player.vx = 0;
+      player.vy = 0;
+    }
+
 }
 
 function update_camera() {
